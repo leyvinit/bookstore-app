@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | Purr-Book</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Additional checkout-specific styles */
+        .checkout-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 1rem;
+        }
+        
+        .checkout-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .checkout-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        
+        .checkout-steps::before {
+            content: '';
+            position: absolute;
+            top: 14px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: #ddd;
+            z-index: -1;
+        }
+        
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 1;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: #ddd;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .step.active .step-number {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .step.completed .step-number {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .checkout-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+        
+        .checkout-form {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .checkout-summary {
+            background-color: white;
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 100px;
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+        
+        .form-section {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 1.5rem;
+        }
+        
+        .form-section:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .form-section h3 {
+            margin-bottom: 1.5rem;
+            color: var(--dark-color);
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+        
+        .order-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-summary-header h3 {
+            margin: 0;
+        }
+        
+        .summary-count {
+            background-color: var(--light-accent);
+            color: var(--primary-color);
+            border-radius: 20px;
+            padding: 0.3rem 0.8rem;
+            font-weight: 500;
+        }
+        
+        .summary-item {
+            display: flex;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+        
+        .summary-item-image {
+            width: 60px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            margin-right: 1rem;
+        }
+        
+        .summary-item-details {
+            flex-grow: 1;
+        }
+        
+        .summary-item-title {
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+        }
+        
+        .summary-item-price {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        
+        .summary-total {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid #eee;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+        
+        .summary-row.total {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 1rem;
+        }
+        
+        .checkout-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            width: 100%;
+            margin-top: 1.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .checkout-button:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .payment-icons {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .payment-icon {
+            width: 40px;
+            height: 25px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .checkout-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .checkout-summary {
+                position: static;
+                max-height: none;
+                order: -1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo">
+                <img src="images/purr-book-logo.png" alt="Purr-Book Logo" id="logo-img">
+                <h1>Purr-Book</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="index.html#categories">Categories</a></li>
+                    <li><a href="index.html#bestsellers">Bestsellers</a></li>
+                    <li><a href="index.html#new-releases">New Releases</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="checkout-container">
+            <div class="checkout-header">
+                <h2>Checkout</h2>
+                <div class="checkout-steps">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Information</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Shipping</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Payment</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Review</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="checkout-layout">
+                <div class="checkout-form">
+                    <div class="form-section">
+                        <h3>Contact Information</h3>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Shipping Address</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="first-name">First Name</label>
+                                <input type="text" id="first-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="last-name">Last Name</label>
+                                <input type="text" id="last-name" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="address">Address</label>
+                            <input type="text" id="address" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="address2">Apartment, suite, etc. (optional)</label>
+                            <input type="text" id="address2">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="city">City</label>
+                                <input type="text" id="city" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="state">State/Province</label>
+                                <input type="text" id="state" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="zip">ZIP/Postal Code</label>
+                                <input type="text" id="zip" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="country">Country</label>
+                                <select id="country" required>
+                                    <option value="">Select Country</option>
+                                    <option value="US">United States</option>
+                                    <option value="CA">Canada</option>
+                                    <option value="UK">United Kingdom</option>
+                                    <option value="AU">Australia</option>
+                                    <option value="FR">France</option>
+                                    <option value="DE">Germany</option>
+                                    <option value="JP">Japan</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h3>Shipping Method</h3>
+                        <div class="form-group">
+                            <div class="radio-group">
+                                <input type="radio" id="standard-shipping" name="shipping" value="standard" checked>
+                                <label for="standard-shipping">
+                                    <div class="shipping-option">
+                                        <div>
+                                            <strong>Standard Shipping</strong>
+                                            <p>3-5 business days</p>
+                                        </div>
+                                        <div>$4.99</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="radio-group">
+                                <input type="radio" id="express-shipping" name="shipping" value="express">
+                                <label for="express-shipping">
+                                    <div class="shipping-option">
+                                        <div>
+                                            <strong>Express Shipping</strong>
+                                            <p>1-2 business days</p>
+                                        </div>
+                                        <div>$9.99</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="checkout-button" id="continue-button">Continue to Payment</button>
+                </div>
+                
+                <div class="checkout-summary">
+                    <div class="order-summary-header">
+                        <h3>Order Summary</h3>
+                        <span class="summary-count" id="summary-count">3 items</span>
+                    </div>
+                    
+                    <div id="summary-items">
+                        <!-- Order items will be dynamically loaded -->
+                        <div class="summary-item">
+                            <img src="images/book1.jpg" alt="The Silent Whispers" class="summary-item-image">
+                            <div class="summary-item-details">
+                                <h4 class="summary-item-title">The Silent Whispers</h4>
+                                <p class="summary-item-price">$24.99 × 1</p>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <img src="images/book4.jpg" alt="The Last Detective" class="summary-item-image">
+                            <div class="summary-item-details">
+                                <h4 class="summary-item-title">The Last Detective</h4>
+                                <p class="summary-item-price">$18.99 × 1</p>
+                            </div>
+                        </div>
+                        
+                        <div class="summary-item">
+                            <img src="images/book6.jpg" alt="The Quantum Paradox" class="summary-item-image">
+                            <div class="summary-item-details">
+                                <h4 class="summary-item-title">The Quantum Paradox</h4>
+                                <p class="summary-item-price">$28.99 × 1</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="summary-total">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span>$72.97</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Shipping</span>
+                            <span>$4.99</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Tax</span>
+                            <span>$6.57</span>
+                        </div>
+                        <div class="summary-row total">
+                            <span>Total</span>
+                            <span>$84.53</span>
+                        </div>
+                    </div>
+                    
+                    <div class="payment-icons">
+                        <div class="payment-icon">
+                            <i class="fab fa-cc-visa"></i>
+                        </div>
+                        <div class="payment-icon">
+                            <i class="fab fa-cc-mastercard"></i>
+                        </div>
+                        <div class="payment-icon">
+                            <i class="fab fa-cc-amex"></i>
+                        </div>
+                        <div class="payment-icon">
+                            <i class="fab fa-cc-paypal"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About Purr-Book</h3>
+                <p>Purr-Book is a fictional bookstore created for portfolio purposes.</p>
+            </div>
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#about">About Us</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#terms">Terms of Service</a></li>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h3>Contact Us</h3>
+                <p>Email: info@purr-book.com</p>
+                <p>Phone: (555) 123-4567</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2025 Purr-Book. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        // Simple checkout page JavaScript
+        document.addEventListener('DOMContentLoaded', function() {
+            const continueButton = document.getElementById('continue-button');
+            
+            continueButton.addEventListener('click', function() {
+                // In a real application, this would validate the form and move to the next step
+                alert('This is a demo. In a real application, this would proceed to the payment page.');
+            });
+            
+            // Load cart items from localStorage (if available)
+            const savedCart = localStorage.getItem('purrBookCart');
+            if (savedCart) {
+                const cart = JSON.parse(savedCart);
+                updateOrderSummary(cart);
+            }
+        });
+        
+        function updateOrderSummary(cart) {
+            if (!cart || cart.length === 0) return;
+            
+            const summaryItemsContainer = document.getElementById('summary-items');
+            const summaryCountElement = document.getElementById('summary-count');
+            
+            // Update item count
+            summaryCountElement.textContent = `${cart.length} items`;
+            
+            // Clear existing items
+            summaryItemsContainer.innerHTML = '';
+            
+            // Calculate totals
+            let subtotal = 0;
+            
+            // Add each item to the summary
+            cart.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = 'summary-item';
+                itemElement.innerHTML = `
+                    <img src="${item.image}" alt="${item.title}" class="summary-item-image">
+                    <div class="summary-item-details">
+                        <h4 class="summary-item-title">${item.title}</h4>
+                        <p class="summary-item-price">$${item.price.toFixed(2)} × ${item.quantity}</p>
+                    </div>
+                `;
+                
+                summaryItemsContainer.appendChild(itemElement);
+            });
+            
+            // Update totals
+            const shipping = 4.99;
+            const tax = subtotal * 0.09;
+            const total = subtotal + shipping + tax;
+            
+            // Update summary amounts
+            document.querySelector('.summary-row:nth-child(1) span:last-child').textContent = `$${subtotal.toFixed(2)}`;
+            document.querySelector('.summary-row:nth-child(3) span:last-child').textContent = `$${tax.toFixed(2)}`;
+            document.querySelector('.summary-row.total span:last-child').textContent = `$${total.toFixed(2)}`;
+        }
+    </script>
+</body>
+</html>
